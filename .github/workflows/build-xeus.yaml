@@ -1,0 +1,33 @@
+name: BuildXeus
+#run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+#
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 4 * * 4'
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu: [22.04, 20.04]
+    runs-on: self-hosted
+    env:
+      IMAGE_NAME: xeus
+      LOCAL_NAME: actions/xeus
+#      DOCKER_LOCAL: ghcr.io/
+#      DOCKER_LOCAL: repo.irsl.eiiris.tut.ac.jp/
+      DOCKER_DEPLOY: repo.irsl.eiiris.tut.ac.jp/
+      DOCKER_TAG: ${{ matrix.ubuntu }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Build and Deploy
+        run: |
+          docker build -f Dockerfile --pull --build-arg BUILD_IMAGE=ubuntu:${{ matrix.ubuntu }} --build-arg BASE_IMAGE=ubuntu:${{ matrix.ubuntu }} -t ${{ env.LOCAL_NAME }}:${{ env.DOCKER_TAG }} .
+          docker tag  ${{ env.LOCAL_NAME }}:${{ env.DOCKER_TAG }} ${{ env.DOCKER_DEPLOY }}xeus:${{ env.DOCKER_TAG }}
+          docker push ${{ env.DOCKER_DEPLOY }}xeus:${{ env.DOCKER_TAG }}
