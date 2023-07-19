@@ -1,0 +1,95 @@
+ARG BUILD_IMAGE=ubuntu:20.04
+ARG BASE_IMAGE=ubuntu:20.04
+ARG OUTPUT_DIR=/opt/xeus3
+FROM ${BUILD_IMAGE} as builder
+## BUILD_PREFIX=repo.irsl.eiiris.tut.ac.jp/
+## docker build -f Dockerfile --build-arg BUILD_IMAGE=ubuntu:20.04 --build-arg BASE_IMAGE=ubuntu:20.04 -t ${BUILD_PREFIX}xeus:20.04 .
+## docker build -f Dockerfile --build-arg BUILD_IMAGE=ubuntu:22.04 --build-arg BASE_IMAGE=ubuntu:22.04 -t ${BUILD_PREFIX}xeus:22.04 .
+
+SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update -q -qq && \
+    apt install -q -qq -y wget libssl-dev openssl cmake g++ pkg-config git uuid-dev libsodium-dev && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/
+
+WORKDIR /build_xeus
+### xeus
+## json
+RUN (mkdir json && wget https://github.com/nlohmann/json/archive/refs/tags/v3.11.2.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C json)
+RUN (cd json; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
+## xtl
+RUN (mkdir xtl && wget https://github.com/xtensor-stack/xtl/archive/refs/tags/0.7.5.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xtl)
+RUN (cd xtl; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
+## xeus / 3.0.5
+RUN (mkdir xeus && wget https://github.com/jupyter-xeus/xeus/archive/refs/tags/3.1.1.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus)
+RUN (cd xeus; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
+
+### xeus-zmp
+## libzmq
+RUN (mkdir libzmq && wget https://github.com/zeromq/libzmq/archive/refs/tags/v4.3.4.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C libzmq)
+RUN (cd libzmq; mkdir build; cd build; cmake -D WITH_PERF_TOOL=OFF -D ZMQ_BUILD_TESTS=OFF -D ENABLE_CPACK=OFF -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=${OUTPUT_DIR} ..; make install -j$(nproc) )
+## cppzmq
+RUN (mkdir cppzmq && wget https://github.com/zeromq/cppzmq/archive/refs/tags/v4.8.1.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C cppzmq)
+RUN (cd cppzmq; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCPPZMQ_BUILD_TESTS=OFF . ; make install -j$(nproc) )
+## xeus-zmq
+RUN (mkdir -p xeus-zmq/build && wget https://github.com/jupyter-xeus/xeus-zmq/archive/refs/tags/1.1.0.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-zmq)
+RUN (cd xeus-zmq/build; cmake -DCMAKE_PREFIX_PATH=${OUTPUT_DIR}  -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR}  -DCMAKE_BUILD_TYPE=Release ..; make install -j$(nproc) )
+
+###
+#
+#
+#
+###
+FROM ${BASE_IMAGE}
+
+LABEL maintainer "IRSL-tut (https://github.com/IRSL-tut) <faculty@irsl.eiiris.tut.ac.jp>"
+
+SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update -q -qq && \
+    apt install -q -qq -y wget libssl-dev openssl cmake g++ pkg-config git uuid-dev libsodium-dev && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/
+
+COPY --from=builder ${OUTPUT_DIR} ${OUTPUT_DIR}
+## COPY --from=builder /usr/local /usr/local
+
+###
+# Build xeus-python (testing kernel)
+###
+WORKDIR /build_xeus
+RUN apt update -q -qq && \
+    apt install -q -qq -y wget python3-pip && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/ && \
+    python3 -m pip install --upgrade pip && \
+    python3 -m pip install jupyterlab
+## pybind11 / v2.6.2(2021.1) v2.7.1(2021.8) v2.8.1(2021.10) v2.9.2(2022.3) v2.10.4(2023.3) v2.11.1(2023.7)
+RUN (mkdir -p pybind11/build && wget https://github.com/pybind/pybind11/archive/refs/tags/v2.6.2.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11 )
+RUN (cd pybind11/build; cmake .. -D CMAKE_PREFIX_PATH=${OUTPUT_DIR} -D CMAKE_INSTALL_PREFIX=${OUTPUT_DIR}  -DPYBIND11_TEST=OFF; make install)
+## pybind11_json / 0.2.8 (2021.2) 0.2.9(2021.2) 0.2.10(2021.5) 0.2.11(2021.7) 0.2.12(2022.1) 0.2.13(2022.8)
+RUN (mkdir -p pybind11_json/build && wget https://github.com/pybind/pybind11_json/archive/refs/tags/0.2.11.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11_json )
+RUN (cd pybind11_json/build; cmake .. -D CMAKE_PREFIX_PATH=${OUTPUT_DIR} -D CMAKE_INSTALL_PREFIX=${OUTPUT_DIR};  make install)
+## xeus-python
+RUN (mkdir -p xeus-python/build && wget https://github.com/jupyter-xeus/xeus-python/archive/refs/tags/0.15.9.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-python)
+RUN (cd xeus-python/build; cmake .. -D CMAKE_PREFIX_PATH=${OUTPUT_DIR} -D CMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -D CMAKE_INSTALL_LIBDIR=lib -D PYTHON_EXECUTABLE=`which python3`; make install -j$(nproc) )
+RUN (git clone https://github.com/jupyter-xeus/xeus-python-shell.git ; cd xeus-python-shell; python3  setup.py install )
+## jupyter lab --allow-root --no-browser --ip=0.0.0.0 --port=8888  --ServerApp.token=''"
+## export PYTHONPATH=/usr/lib/python38.zip:/usr/lib/python3.8:/usr/lib/python3.8/lib-dynload:/usr/local/lib/python3.8/dist-packages:/usr/local/lib/python3.8/dist-packages/xeus_python_shell-0.6.0-py3.8.egg:/usr/lib/python3/dist-packages
+###
+
+RUN apt update -q -qq && \
+    apt install -q -qq -y wget python3-pip && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/ && \
+    python3 -m pip install --upgrade pip && \
+    python3 -m pip install jupyterlab
+
+## docker run -it --net=host -v $(pwd):/hoge -w /hoge xeus:20.04 bash
+## jupyter lab --allow-root
+## cmake -DCMAKE_PREFIX_PATH=${OUTPUT_DIR}/share/cmake -DZeroMQ_DIR=${OUTPUT_DIR}/lib/cmake/ZeroMQ ....
+ENV JUPYTER_PATH=${OUTPUT_DIR}/share/jupyter
+CMD ["jupyter", "lab", "--allow-root"]
