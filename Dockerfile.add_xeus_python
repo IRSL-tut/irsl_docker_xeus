@@ -1,0 +1,80 @@
+## BUILD_PREFIX=repo.irsl.eiiris.tut.ac.jp/
+## docker build --progress=plain -f Dockerfile.add_xeus_python --build-arg BUILD_IMAGE=xeus3:20.04 --build-arg BASE_IMAGE=ubuntu:20.04 -t xeus_python:20.04 .
+
+### global ARG
+ARG OUTPUT_DIR=/opt/xeus3
+ARG BUILD_IMAGE=xeus3:20.04
+ARG BASE_IMAGE=ubuntu:20.04
+
+###
+#
+# builder
+#
+###
+FROM ${BUILD_IMAGE} as builder
+
+ARG OUTPUT_DIR
+
+SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update -q -qq && \
+    apt install -q -qq -y wget libssl-dev openssl cmake g++ pkg-config git uuid-dev libsodium-dev && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/
+
+###
+# Build xeus-python (testing kernel)
+###
+WORKDIR /build_xeus
+
+## pybind11 / v2.6.2(2021.1) v2.7.1(2021.8) v2.8.1(2021.10) v2.9.2(2022.3) v2.10.4(2023.3) v2.11.1(2023.7)
+RUN (mkdir -p pybind11/build && wget https://github.com/pybind/pybind11/archive/refs/tags/v2.6.2.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11 )
+RUN (cd pybind11/build; cmake .. -D CMAKE_PREFIX_PATH=${OUTPUT_DIR} -D CMAKE_INSTALL_PREFIX=${OUTPUT_DIR}  -DPYBIND11_TEST=OFF; make install)
+
+## pybind11_json / 0.2.8 (2021.2) 0.2.9(2021.2) 0.2.10(2021.5) 0.2.11(2021.7) 0.2.12(2022.1) 0.2.13(2022.8)
+RUN (mkdir -p pybind11_json/build && wget https://github.com/pybind/pybind11_json/archive/refs/tags/0.2.11.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11_json )
+RUN (cd pybind11_json/build; cmake .. -D CMAKE_PREFIX_PATH=${OUTPUT_DIR} -D CMAKE_INSTALL_PREFIX=${OUTPUT_DIR};  make install)
+
+## xeus-python
+RUN (mkdir -p xeus-python/build && wget https://github.com/jupyter-xeus/xeus-python/archive/refs/tags/0.15.9.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-python)
+RUN (cd xeus-python/build; cmake .. -D CMAKE_PREFIX_PATH=${OUTPUT_DIR} -D CMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -D CMAKE_INSTALL_LIBDIR=lib -D PYTHON_EXECUTABLE=`which python3`; make install -j$(nproc) )
+
+###
+#
+# last stage
+#
+###
+FROM ${BASE_IMAGE}
+
+ARG OUTPUT_DIR
+
+LABEL maintainer "IRSL-tut (https://github.com/IRSL-tut) <faculty@irsl.eiiris.tut.ac.jp>"
+
+SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update -q -qq && \
+    apt install -q -qq -y libssl-dev openssl pkg-config uuid-dev libsodium-dev && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/
+
+COPY --from=builder ${OUTPUT_DIR} ${OUTPUT_DIR}
+
+### jupyter
+RUN apt update -q -qq && \
+    apt install -q -qq -y wget git python3-pip && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/ && \
+    python3 -m pip install --upgrade pip && \
+    python3 -m pip install jupyterlab
+
+##
+RUN (git clone https://github.com/jupyter-xeus/xeus-python-shell.git ; cd xeus-python-shell; python3  setup.py install )
+
+## docker run -it -p 8888:8888 xeus_python:20.04 bash
+## jupyter lab --allow-root --no-browser --ip=0.0.0.0 --port=8888  --ServerApp.token=''"
+## export PYTHONPATH=/usr/lib/python38.zip:/usr/lib/python3.8:/usr/lib/python3.8/lib-dynload:/usr/local/lib/python3.8/dist-packages:/usr/local/lib/python3.8/dist-packages/xeus_python_shell-0.6.0-py3.8.egg:/usr/lib/python3/dist-packages
+
+ENV JUPYTER_PATH=${OUTPUT_DIR}/share/jupyter
+CMD ["jupyter", "lab", "--allow-root"]
