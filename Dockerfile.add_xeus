@@ -1,11 +1,14 @@
 ## add xeus existing BUILD_IMAGE (already build xeus)
 ARG BUILD_IMAGE=ubuntu:20.04
 ARG BASE_IMAGE=ubuntu:20.04
+ARG OUTPUT_DIR=/opt/xeus
 
 FROM ${BUILD_IMAGE} as builder
 ## do nothing
 
 FROM ${BASE_IMAGE}
+
+ARG OUTPUT_DIR
 
 LABEL maintainer "IRSL-tut (https://github.com/IRSL-tut) <faculty@irsl.eiiris.tut.ac.jp>"
 
@@ -17,7 +20,7 @@ RUN apt update -q -qq && \
     apt clean && \
     rm -rf /var/lib/apt/lists/
 
-COPY --from=builder /opt/xeus /opt/xeus
+COPY --from=builder ${OUTPUT_DIR} ${OUTPUT_DIR}
 
 RUN apt update -q -qq && \
     apt install -q -qq -y python3-pip && \
@@ -26,5 +29,5 @@ RUN apt update -q -qq && \
     python3 -m pip install --upgrade pip && \
     python3 -m pip install ipython jedi jupyterlab jupyter-console
 
-ENV PATH=$PATH:/opt/xeus/bin
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/xeus/lib
+ENV PATH=$PATH:${OUTPUT_DIR}/bin
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OUTPUT_DIR}/lib
