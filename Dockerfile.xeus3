@@ -1,10 +1,12 @@
+## BUILD_PREFIX=repo.irsl.eiiris.tut.ac.jp/
+## docker build --progress=plain -f Dockerfile.xeus3 --build-arg BUILD_IMAGE=ubuntu:20.04 --build-arg BASE_IMAGE=ubuntu:20.04 -t xeus3:20.04 .
+### global ARG
+ARG OUTPUT_DIR=/opt/xeus3
 ARG BUILD_IMAGE=ubuntu:20.04
 ARG BASE_IMAGE=ubuntu:20.04
-ARG OUTPUT_DIR=/opt/xeus3
 FROM ${BUILD_IMAGE} as builder
-## BUILD_PREFIX=repo.irsl.eiiris.tut.ac.jp/
-## docker build -f Dockerfile --build-arg BUILD_IMAGE=ubuntu:20.04 --build-arg BASE_IMAGE=ubuntu:20.04 -t ${BUILD_PREFIX}xeus:20.04 .
-## docker build -f Dockerfile --build-arg BUILD_IMAGE=ubuntu:22.04 --build-arg BASE_IMAGE=ubuntu:22.04 -t ${BUILD_PREFIX}xeus:22.04 .
+
+ARG OUTPUT_DIR
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
@@ -43,6 +45,8 @@ RUN (cd xeus-zmq/build; cmake -DCMAKE_PREFIX_PATH=${OUTPUT_DIR}  -DCMAKE_INSTALL
 #
 ###
 FROM ${BASE_IMAGE}
+
+ARG OUTPUT_DIR
 
 LABEL maintainer "IRSL-tut (https://github.com/IRSL-tut) <faculty@irsl.eiiris.tut.ac.jp>"
 
