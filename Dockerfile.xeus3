@@ -4,6 +4,12 @@
 ARG OUTPUT_DIR=/opt/xeus3
 ARG BUILD_IMAGE=ubuntu:20.04
 ARG BASE_IMAGE=ubuntu:20.04
+
+###
+#
+#
+#
+###
 FROM ${BUILD_IMAGE} as builder
 
 ARG OUTPUT_DIR
@@ -31,13 +37,13 @@ RUN (cd xeus; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_D
 ### xeus-zmp
 ## libzmq
 RUN (mkdir libzmq && wget https://github.com/zeromq/libzmq/archive/refs/tags/v4.3.4.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C libzmq)
-RUN (cd libzmq; mkdir build; cd build; cmake -D WITH_PERF_TOOL=OFF -D ZMQ_BUILD_TESTS=OFF -D ENABLE_CPACK=OFF -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=${OUTPUT_DIR} ..; make install -j$(nproc) )
+RUN (cd libzmq; mkdir build; cd build; cmake -DWITH_PERF_TOOL=OFF -DZMQ_BUILD_TESTS=OFF -DENABLE_CPACK=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} ..; make install -j$(nproc) )
 ## cppzmq
 RUN (mkdir cppzmq && wget https://github.com/zeromq/cppzmq/archive/refs/tags/v4.8.1.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C cppzmq)
 RUN (cd cppzmq; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCPPZMQ_BUILD_TESTS=OFF . ; make install -j$(nproc) )
 ## xeus-zmq
 RUN (mkdir -p xeus-zmq/build && wget https://github.com/jupyter-xeus/xeus-zmq/archive/refs/tags/1.1.0.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-zmq)
-RUN (cd xeus-zmq/build; cmake -DCMAKE_PREFIX_PATH=${OUTPUT_DIR}  -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR}  -DCMAKE_BUILD_TYPE=Release ..; make install -j$(nproc) )
+RUN (cd xeus-zmq/build; cmake -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCMAKE_BUILD_TYPE=Release ..; make install -j$(nproc) )
 
 ###
 #
@@ -67,8 +73,12 @@ RUN apt update -q -qq && \
     python3 -m pip install --upgrade pip && \
     python3 -m pip install jupyterlab
 
+ENV JUPYTER_PATH=${OUTPUT_DIR}/share/jupyter
+CMD ["jupyter", "lab", "--allow-root"]
+
+#
+# sample
+#
 ## docker run -it --net=host -v $(pwd):/hoge -w /hoge xeus:20.04 bash
 ## jupyter lab --allow-root
 ## cmake -DCMAKE_PREFIX_PATH=${OUTPUT_DIR}/share/cmake -DZeroMQ_DIR=${OUTPUT_DIR}/lib/cmake/ZeroMQ ....
-ENV JUPYTER_PATH=${OUTPUT_DIR}/share/jupyter
-CMD ["jupyter", "lab", "--allow-root"]
