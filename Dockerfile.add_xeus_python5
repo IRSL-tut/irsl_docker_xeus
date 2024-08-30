@@ -1,9 +1,9 @@
 ## BUILD_PREFIX=repo.irsl.eiiris.tut.ac.jp/
-## docker build --progress=plain -f Dockerfile.add_xeus_python --build-arg OUTPUT_DIR=/opt/xeus --build-arg BUILD_IMAGE=${BUILD_PREFIX}xeus3:20.04 --build-arg BASE_IMAGE=ubuntu:20.04 -t ${BUILD_PREFIX}xeus_python:20.04 .
+## docker build --progress=plain -f Dockerfile.add_xeus_python5 --build-arg BUILD_IMAGE=xeus5:20.04 --build-arg BASE_IMAGE=ubuntu:20.04 -t xeus_python5:20.04 .
 
 ### global ARG
-ARG OUTPUT_DIR=/opt/xeus3
-ARG BUILD_IMAGE=xeus3:20.04
+ARG OUTPUT_DIR=/opt/xeus5
+ARG BUILD_IMAGE=xeus5:20.04
 ARG BASE_IMAGE=ubuntu:20.04
 
 ###
@@ -19,25 +19,28 @@ SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update -q -qq && \
-    apt install -q -qq -y wget cmake g++ git openssl pkg-config libzmq5-dev uuid-dev libssl-dev libsodium-dev && \
+    apt install -q -qq -y wget       g++ git openssl pkg-config libzmq5-dev uuid-dev libssl-dev libsodium-dev && \
     apt clean && \
     rm -rf /var/lib/apt/lists/
+
+### install cmake to /usr/local
+RUN ( wget https://github.com/Kitware/CMake/releases/download/v3.30.3/cmake-3.30.3-linux-x86_64.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C /usr/local )
 
 ###
 # Build xeus-python (testing kernel)
 ###
 WORKDIR /build_xeus
 
-## pybind11 / v2.6.2(2021.1) v2.7.1(2021.8) v2.8.1(2021.10) v2.9.2(2022.3) v2.10.4(2023.3) v2.11.1(2023.7)
-RUN (mkdir -p pybind11/build && wget https://github.com/pybind/pybind11/archive/refs/tags/v2.6.2.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11 )
+## pybind11 / v2.6.2(2021.1) v2.7.1(2021.8) v2.8.1(2021.10) v2.9.2(2022.3) v2.10.4(2023.3) v2.11.1(2023.7) v2.12 v2.13...
+RUN (mkdir -p pybind11/build && wget https://github.com/pybind/pybind11/archive/refs/tags/v2.12.0.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11 )
 RUN (cd pybind11/build; cmake .. -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DPYBIND11_TEST=OFF; make install)
 
-## pybind11_json / 0.2.8 (2021.2) 0.2.9(2021.2) 0.2.10(2021.5) 0.2.11(2021.7) 0.2.12(2022.1) 0.2.13(2022.8)
-RUN (mkdir -p pybind11_json/build && wget https://github.com/pybind/pybind11_json/archive/refs/tags/0.2.11.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11_json )
+## pybind11_json / 0.2.8 (2021.2) 0.2.9(2021.2) 0.2.10(2021.5) 0.2.11(2021.7) 0.2.12(2022.1) 0.2.13(2022.8) 0.2.14(2024.5)
+RUN (mkdir -p pybind11_json/build && wget https://github.com/pybind/pybind11_json/archive/refs/tags/0.2.14.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11_json )
 RUN (cd pybind11_json/build; cmake .. -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR}; make install)
 
 ## xeus-python
-RUN (mkdir -p xeus-python/build && wget https://github.com/jupyter-xeus/xeus-python/archive/refs/tags/0.15.9.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-python)
+RUN (mkdir -p xeus-python/build && wget https://github.com/jupyter-xeus/xeus-python/archive/refs/tags/0.17.1.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-python)
 RUN (cd xeus-python/build; cmake .. -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCMAKE_INSTALL_LIBDIR=lib -DPYTHON_EXECUTABLE=`which python3`; make install -j$(nproc) )
 
 ###
@@ -55,7 +58,7 @@ SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update -q -qq && \
-    apt install -q -qq -y wget cmake g++ git openssl pkg-config libzmq5-dev uuid-dev libssl-dev libsodium-dev && \
+    apt install -q -qq -y                    openssl pkg-config libzmq5-dev uuid-dev libssl-dev libsodium-dev && \
     apt clean && \
     rm -rf /var/lib/apt/lists/
 
@@ -71,7 +74,7 @@ RUN apt update -q -qq && \
 
 ##
 #RUN (git clone https://github.com/jupyter-xeus/xeus-python-shell.git; cd xeus-python-shell; python3 setup.py install)
-RUN (mkdir -p xeus-python-shell && wget https://github.com/jupyter-xeus/xeus-python-shell/archive/refs/tags/0.6.0.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-python-shell && cd xeus-python-shell &&  python3 setup.py install)
+RUN (mkdir -p xeus-python-shell && wget https://github.com/jupyter-xeus/xeus-python-shell/archive/refs/tags/0.6.3.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-python-shell && cd xeus-python-shell &&  python3 setup.py install)
 
 ENV JUPYTER_PATH=${OUTPUT_DIR}/share/jupyter
 CMD ["jupyter", "lab", "--allow-root"]
