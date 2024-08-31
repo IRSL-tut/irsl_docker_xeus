@@ -37,7 +37,8 @@ RUN (mkdir -p pybind11_json/build && wget https://github.com/pybind/pybind11_jso
 RUN (cd pybind11_json/build; cmake .. -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR}; make install)
 
 ## xeus-python
-RUN (mkdir -p xeus-python/build && wget https://github.com/jupyter-xeus/xeus-python/archive/refs/tags/0.15.9.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-python)
+#RUN (mkdir -p xeus-python/build && wget https://github.com/jupyter-xeus/xeus-python/archive/refs/tags/0.15.9.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-python)
+RUN (mkdir -p xeus-python/build && wget https://github.com/jupyter-xeus/xeus-python/archive/refs/tags/0.16.0.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-python)
 RUN (cd xeus-python/build; cmake .. -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCMAKE_INSTALL_LIBDIR=lib -DPYTHON_EXECUTABLE=`which python3`; make install -j$(nproc) )
 
 ###
