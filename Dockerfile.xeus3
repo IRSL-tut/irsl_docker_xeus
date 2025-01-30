@@ -47,8 +47,8 @@ RUN (cd xeus; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_D
 RUN (mkdir cppzmq && wget https://github.com/zeromq/cppzmq/archive/refs/tags/v4.8.1.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C cppzmq)
 RUN (cd cppzmq; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCPPZMQ_BUILD_TESTS=OFF . ; make install -j$(nproc) )
 ## xeus-zmq 1.1.1
-#RUN (mkdir -p xeus-zmq/build && wget https://github.com/jupyter-xeus/xeus-zmq/archive/refs/tags/1.1.0.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-zmq)
-#RUN (cd xeus-zmq/build; cmake -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCMAKE_BUILD_TYPE=Release ..; make install -j$(nproc) )
+RUN (mkdir -p xeus-zmq/build && wget https://github.com/jupyter-xeus/xeus-zmq/archive/refs/tags/1.1.0.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-zmq)
+RUN (cd xeus-zmq/build; cmake -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCMAKE_BUILD_TYPE=Release ..; make install -j$(nproc) )
 ## xeus-zmq 1.3.0 / iopub_welcome does not match with jupyter-console
 #RUN (mkdir -p xeus-zmq/build && wget https://github.com/jupyter-xeus/xeus-zmq/archive/refs/tags/1.3.0.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-zmq)
 #RUN (cd xeus-zmq/build; cmake -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCMAKE_BUILD_TYPE=Release ..; make install -j$(nproc) )
