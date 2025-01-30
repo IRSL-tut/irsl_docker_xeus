@@ -31,7 +31,7 @@ RUN (cd json; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_D
 ## xtl
 RUN (mkdir xtl && wget https://github.com/xtensor-stack/xtl/archive/refs/tags/0.7.7.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xtl)
 RUN (cd xtl; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
-## xeus / 3.1.1
+## xeus / 5.1.1
 RUN (mkdir xeus && wget https://github.com/jupyter-xeus/xeus/archive/refs/tags/5.1.1.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus)
 RUN (cd xeus; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
 
@@ -72,8 +72,12 @@ RUN apt update -q -qq && \
     apt install -q -qq -y wget python3-pip && \
     apt clean && \
     rm -rf /var/lib/apt/lists/ && \
-    python3 -m pip install --upgrade pip && \
-    python3 -m pip install jupyterlab
+    if [ "$(lsb_release -s -r)" = "24.04" ]; then \
+        PIP_OPT="--break-system-packages"; \
+    else \
+        python3 -m pip install --upgrade pip; \
+    fi && \
+    python3 -m pip install $PIP_OPT jupyterlab
 
 ENV JUPYTER_PATH=${OUTPUT_DIR}/share/jupyter
 CMD ["jupyter", "lab", "--allow-root"]
