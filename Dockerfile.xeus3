@@ -79,7 +79,11 @@ RUN apt update -q -qq && \
     apt install -q -qq -y wget python3-pip && \
     apt clean && \
     rm -rf /var/lib/apt/lists/ && \
-    if [ "$(lsb_release -s -r)" = "24.04" ]; then PIP_OPT="--break-system-packages"; else python3 -m pip install --upgrade pip; fi && \
+    if [ "$(lsb_release -s -r)" = "24.04" ]; then \
+        PIP_OPT="--break-system-packages"; \
+    else \
+        python3 -m pip install --upgrade pip; \
+    fi && \
     python3 -m pip install $PIP_OPT jupyterlab
 
 ENV JUPYTER_PATH=${OUTPUT_DIR}/share/jupyter
