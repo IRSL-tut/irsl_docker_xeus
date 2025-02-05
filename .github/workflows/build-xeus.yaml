@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ubuntu: [ 20.04, 22.04 ]
+        ubuntu: [ 20.04, 22.04, 24.04 ]
 #        ubuntu: [ 18.04, 20.04, 22.04 ] ## 18.04 version of cmake
     runs-on: self-hosted
     env:
@@ -27,11 +27,11 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - name: Build (xeus2) and Deploy
-        run: |
-          docker build -f Dockerfile --pull --build-arg BUILD_IMAGE=ubuntu:${{ matrix.ubuntu }} --build-arg BASE_IMAGE=ubuntu:${{ matrix.ubuntu }} -t ${{ env.LOCAL_NAME }}2:${{ env.DOCKER_TAG }} .
-          docker tag  ${{ env.LOCAL_NAME }}2:${{ env.DOCKER_TAG }} ${{ env.DOCKER_DEPLOY }}xeus2:${{ env.DOCKER_TAG }}
-          docker push ${{ env.DOCKER_DEPLOY }}xeus2:${{ env.DOCKER_TAG }}
+#>      - name: Build (xeus2) and Deploy
+#>        run: |
+#>          docker build -f Dockerfile --pull --build-arg BUILD_IMAGE=ubuntu:${{ matrix.ubuntu }} --build-arg BASE_IMAGE=ubuntu:${{ matrix.ubuntu }} -t ${{ env.LOCAL_NAME }}2:${{ env.DOCKER_TAG }} .
+#>          docker tag  ${{ env.LOCAL_NAME }}2:${{ env.DOCKER_TAG }} ${{ env.DOCKER_DEPLOY }}xeus2:${{ env.DOCKER_TAG }}
+#>          docker push ${{ env.DOCKER_DEPLOY }}xeus2:${{ env.DOCKER_TAG }}
       - name: Build (xeus3) and Deploy
         run: |
           docker build -f Dockerfile.xeus3 --pull --build-arg BUILD_IMAGE=ubuntu:${{ matrix.ubuntu }} --build-arg BASE_IMAGE=ubuntu:${{ matrix.ubuntu }} --build-arg OUTPUT_DIR=/opt/xeus -t ${{ env.LOCAL_NAME }}3:${{ env.DOCKER_TAG }} .
