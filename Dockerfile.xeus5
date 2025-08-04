@@ -1,5 +1,5 @@
 ## BUILD_PREFIX=repo.irsl.eiiris.tut.ac.jp/
-## docker build --progress=plain -f Dockerfile.xeus5 --build-arg BUILD_IMAGE=ubuntu:20.04 --build-arg BASE_IMAGE=ubuntu:20.04 -t xeus5:20.04 .
+## docker build --progress=plain -f Dockerfile.xeus5 --build-arg BUILD_IMAGE=ubuntu:24.04 --build-arg BASE_IMAGE=ubuntu:24.04 -t xeus5:24.04 .
 ### global ARG
 ARG OUTPUT_DIR=/opt/xeus5
 ARG BUILD_IMAGE=ubuntu:20.04
@@ -32,7 +32,10 @@ RUN (cd json; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_D
 RUN (mkdir xtl && wget https://github.com/xtensor-stack/xtl/archive/refs/tags/0.7.7.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xtl)
 RUN (cd xtl; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
 ###### xeus / 5.1.1
-RUN (mkdir xeus && wget https://github.com/jupyter-xeus/xeus/archive/refs/tags/5.1.1.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus)
+#RUN (mkdir xeus && wget https://github.com/jupyter-xeus/xeus/archive/refs/tags/5.1.1.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus)
+#RUN (cd xeus; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
+###### xeus / 5.2.3
+RUN (mkdir xeus && wget https://github.com/jupyter-xeus/xeus/archive/refs/tags/5.2.3.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus)
 RUN (cd xeus; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
 
 ####### xeus-zmp
@@ -62,7 +65,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # xtl-dev 
 RUN apt update -q -qq && \
-    apt install -q -qq -y                    openssl pkg-config libzmq5-dev uuid-dev libssl-dev libsodium-dev && \
+    apt install -q -qq -y                    openssl pkg-config libzmq5-dev uuid-dev libssl-dev libsodium-dev lsb-release && \
     apt clean && \
     rm -rf /var/lib/apt/lists/
 
