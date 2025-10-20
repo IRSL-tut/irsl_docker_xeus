@@ -39,9 +39,18 @@ jobs:
 #>          docker push ${{ env.DOCKER_DEPLOY }}xeus3:${{ env.DOCKER_TAG }}
 #>          docker tag  ${{ env.LOCAL_NAME }}3:${{ env.DOCKER_TAG }} ${{ env.DOCKER_DEPLOY }}xeus:${{ env.DOCKER_TAG }}
 #>          docker push ${{ env.DOCKER_DEPLOY }}xeus:${{ env.DOCKER_TAG }}
-      - name: Build (xeus5) and Deploy
+      - name: Build (xeus5)
         run: |
-          docker build -f Dockerfile.xeus5all --pull --build-arg BUILD_IMAGE=ubuntu:${{ matrix.ubuntu }} --build-arg BASE_IMAGE=ubuntu:${{ matrix.ubuntu }} --build-arg OUTPUT_DIR=/opt/xeus -t ${{ env.LOCAL_NAME }}5:${{ env.DOCKER_TAG }} .
+          for i in {1..10}
+          do
+              docker pull ubuntu:${{ matrix.ubuntu }}
+              if [ $? eq 0 ]; then
+                  break;
+              fi
+          done
+          docker build -f Dockerfile.xeus5all --build-arg BUILD_IMAGE=ubuntu:${{ matrix.ubuntu }} --build-arg BASE_IMAGE=ubuntu:${{ matrix.ubuntu }} --build-arg OUTPUT_DIR=/opt/xeus -t ${{ env.LOCAL_NAME }}5:${{ env.DOCKER_TAG }} .
+      - name: Deploy
+        run: |
           docker tag  ${{ env.LOCAL_NAME }}5:${{ env.DOCKER_TAG }} ${{ env.DOCKER_DEPLOY }}xeus5:${{ env.DOCKER_TAG }}
           docker push ${{ env.DOCKER_DEPLOY }}xeus5:${{ env.DOCKER_TAG }}
           docker tag  ${{ env.LOCAL_NAME }}5:${{ env.DOCKER_TAG }} ${{ env.DOCKER_DEPLOY }}xeus:${{ env.DOCKER_TAG }}
