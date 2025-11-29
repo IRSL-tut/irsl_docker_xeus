@@ -1,4 +1,4 @@
-ipython<9
+ipython
 jedi
 jupyterlab
 jupyter-console
