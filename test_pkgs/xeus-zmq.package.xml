@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>xeus-zmp</name>
+  <version>0.0.0</version>
+  <description>dummy</description>
+
+  <maintainer email="faculty@irsl.eiiris.tut.ac.jp"> IRSL at Toyohashi Tech </maintainer>
+
+  <license>MIT</license>
+
+  <depend>cppzmp</depend>
+  <depend>xeus</depend>
+  
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+</package>
