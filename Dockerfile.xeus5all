@@ -7,7 +7,7 @@ ARG BASE_IMAGE=ubuntu:20.04
 
 ###
 #
-#
+# Build libraries
 #
 ###
 FROM ${BUILD_IMAGE} as builder
@@ -27,47 +27,49 @@ RUN apt update -q -qq && \
 RUN ( wget https://github.com/Kitware/CMake/releases/download/v3.30.3/cmake-3.30.3-linux-x86_64.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C /usr/local )
 
 WORKDIR /build_xeus
-######## xeus
-###### json
-RUN (mkdir json && wget https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C json)
-RUN (cd json; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DJSON_BuildTests=OFF . ; make install -j$(nproc) )
-###### xtl
-RUN (mkdir xtl && wget https://github.com/xtensor-stack/xtl/archive/refs/tags/0.7.7.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xtl)
-RUN (cd xtl; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
-###### xeus / 5.1.1
-#RUN (mkdir xeus && wget https://github.com/jupyter-xeus/xeus/archive/refs/tags/5.1.1.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus)
-#RUN (cd xeus; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
-###### xeus / 5.2.3
-RUN (mkdir xeus && wget https://github.com/jupyter-xeus/xeus/archive/refs/tags/5.2.3.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus)
-RUN (cd xeus; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
 
-####### xeus-zmp
-###### libzmq
-#####RUN (mkdir libzmq && wget https://github.com/zeromq/libzmq/archive/refs/tags/v4.3.4.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C libzmq)
-#####RUN (cd libzmq; mkdir build; cd build; cmake -DWITH_PERF_TOOL=OFF -DZMQ_BUILD_TESTS=OFF -DENABLE_CPACK=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} ..; make install -j$(nproc) )
-###### cppzmq
-RUN (mkdir cppzmq && wget https://github.com/zeromq/cppzmq/archive/refs/tags/v4.10.0.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C cppzmq)
-RUN (cd cppzmq; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCPPZMQ_BUILD_TESTS=OFF . ; make install -j$(nproc) )
-###### xeus-zmq
-RUN (mkdir -p xeus-zmq/build && wget https://github.com/jupyter-xeus/xeus-zmq/archive/refs/tags/3.1.0.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-zmq)
-RUN (cd xeus-zmq/build; cmake -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCMAKE_BUILD_TYPE=Release ..; make install -j$(nproc) )
+### copy build script main from local_build5.sh
+RUN <<EOF
+VER_JSON=v3.12.0
+VER_XEUS=5.2.8
+VER_CPPZMQ=v4.11.0
+VER_XEUS_ZMQ=3.1.2
+VER_PYBIND11=v2.13.6
+VER_PYBIND_JSON=0.2.15
+VER_XEUS_PYTHON=0.17.8
 
-####### xeus-python
-#### pybind11
-RUN (mkdir -p pybind11/build && wget https://github.com/pybind/pybind11/archive/refs/tags/v2.13.6.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11 )
-RUN (cd pybind11/build; cmake .. -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DPYBIND11_TEST=OFF; make install)
+#### xeus
+## json
+(mkdir json && wget https://github.com/nlohmann/json/archive/refs/tags/${VER_JSON}.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C json)
+(cd json; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DJSON_BuildTests=OFF . ; make install -j$(nproc) )
+## xeus
+(mkdir xeus && wget https://github.com/jupyter-xeus/xeus/archive/refs/tags/${VER_XEUS}.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus)
+(cd xeus; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} . ; make install -j$(nproc) )
 
-##### pybind11_json / 0.2.8 (2021.2) 0.2.9(2021.2) 0.2.10(2021.5) 0.2.11(2021.7) 0.2.12(2022.1) 0.2.13(2022.8) 0.2.14(2024.5)
-RUN (mkdir -p pybind11_json/build && wget https://github.com/pybind/pybind11_json/archive/refs/tags/0.2.15.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11_json )
-RUN (cd pybind11_json/build; cmake .. -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR}; make install)
+### xeus-zmp
+## cppzmq
+(mkdir cppzmq && wget https://github.com/zeromq/cppzmq/archive/refs/tags/${VER_CPPZMQ}.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C cppzmq)
+(cd cppzmq; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCPPZMQ_BUILD_TESTS=OFF . ; make install -j$(nproc) )
+## xeus-zmq
+(mkdir -p xeus-zmq/build && wget https://github.com/jupyter-xeus/xeus-zmq/archive/refs/tags/${VER_XEUS_ZMQ}.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-zmq)
+(cd xeus-zmq/build; cmake -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCMAKE_BUILD_TYPE=Release ..; make install -j$(nproc) )
 
-##### xeus-python
-RUN (mkdir -p xeus-python/build && wget https://github.com/jupyter-xeus/xeus-python/archive/refs/tags/0.17.4.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-python)
-RUN (cd xeus-python/build; cmake .. -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCMAKE_INSTALL_LIBDIR=lib -DPYTHON_EXECUTABLE=`which python3`; make install -j$(nproc) )
+### xeus-python
+## pybind11
+(mkdir -p pybind11/build && wget https://github.com/pybind/pybind11/archive/refs/tags/${VER_PYBIND11}.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11 )
+(cd pybind11/build; cmake .. -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DPYBIND11_TEST=OFF; make install)
+## pybind11_json
+(mkdir -p pybind11_json/build && wget https://github.com/pybind/pybind11_json/archive/refs/tags/${VER_PYBIND_JSON}.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C pybind11_json )
+(cd pybind11_json/build; cmake .. -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR}; make install)
+## xeus-python
+(mkdir -p xeus-python/build && wget https://github.com/jupyter-xeus/xeus-python/archive/refs/tags/${VER_XEUS_PYTHON}.tar.gz --quiet -O - | tar zxf - --strip-components 1 -C xeus-python)
+(cd xeus-python/build; cmake .. -DCMAKE_PREFIX_PATH=${OUTPUT_DIR} -DCMAKE_INSTALL_PREFIX=${OUTPUT_DIR} -DCMAKE_INSTALL_LIBDIR=lib -DPYTHON_EXECUTABLE=`which python3`; make install -j$(nproc) )
+
+EOF
 
 ###
 #
-#
+# Copy built libraries
 #
 ###
 FROM ${BASE_IMAGE}
