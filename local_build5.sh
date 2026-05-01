@@ -72,23 +72,32 @@ export LD_LIBRARY_PATH=$HOME/.local/lib
 #>VER_PYBIND_JSON=0.2.15
 #>VER_XEUS_PYTHON=0.17.4
 
-## stable xeus 5.2.x, xeus-zmq 3.1.x, xeus-python 0.17.x
+#>## stable xeus 5.2.x, xeus-zmq 3.1.x, xeus-python 0.17.x
+#>VER_JSON=v3.12.0
+#>VER_XEUS=5.2.8
+#>VER_CPPZMQ=v4.11.0
+#>VER_XEUS_ZMQ=3.1.2
+#>VER_PYBIND11=v2.13.6
+#>VER_PYBIND_JSON=0.2.15
+#>VER_XEUS_PYTHON=0.17.8
+
+## tip xeus 6.0.x, xeus-zmq 4.0.x, xeus-python 0.18.x
 VER_JSON=v3.12.0
-VER_XEUS=5.2.8
+VER_XEUS=6.0.5
 VER_CPPZMQ=v4.11.0
-VER_XEUS_ZMQ=3.1.2
+VER_XEUS_ZMQ=4.0.0
 VER_PYBIND11=v2.13.6
 VER_PYBIND_JSON=0.2.15
-VER_XEUS_PYTHON=0.17.8
+VER_XEUS_PYTHON=0.18.3
 
-#>## tip xeus 6.0.x, xeus-zmq 4.0.x, xeus-python 0.18.x
+#>## tip xeus 6.0.x, xeus-zmq 4.0.x, xeus-python 0.19.x
 #>VER_JSON=v3.12.0
-#>VER_XEUS=6.0.2
+#>VER_XEUS=6.0.5
 #>VER_CPPZMQ=v4.11.0
 #>VER_XEUS_ZMQ=4.0.0
 #>VER_PYBIND11=v2.13.6
 #>VER_PYBIND_JSON=0.2.15
-#>VER_XEUS_PYTHON=0.18.1
+#>VER_XEUS_PYTHON=0.19.0
 
 #### xeus
 ## json
