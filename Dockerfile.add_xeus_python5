@@ -11,7 +11,7 @@ ARG BASE_IMAGE=ubuntu:20.04
 # builder
 #
 ###
-FROM ${BUILD_IMAGE} as builder
+FROM ${BUILD_IMAGE} AS builder
 
 ARG OUTPUT_DIR
 
