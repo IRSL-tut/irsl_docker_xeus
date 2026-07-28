@@ -70,7 +70,7 @@ RUN apt update -q -qq && \
     apt install -q -qq -y wget git python3-pip && \
     apt clean && \
     rm -rf /var/lib/apt/lists/ && \
-    if [ "$(lsb_release -s -r)" = "24.04" ]; then \
+    if $(echo -e "23.10\n$(lsb_release -s -r)" | sort -C -V); then \
         PIP_OPT="--break-system-packages"; \
     else \
         python3 -m pip install --upgrade pip; \
