@@ -7,11 +7,12 @@ RUN_APT_GET=0
 
 usage() {
     cat <<'EOF'
-Usage: local_build5.sh [--apt-get] [--output-dir OUTPUT_DIR]
+Usage: local_build5.sh [--apt-get] [--output-dir OUTPUT_DIR] [--xeus-version VERSION]
 
 Options:
   --apt-get                Install system dependencies via apt.
   --output-dir OUTPUT_DIR  Install prefix for built artifacts.
+    --xeus-version VERSION   Select a compatible package set for xeus VERSION.
   -h, --help               Show this help.
 EOF
 }
@@ -31,6 +32,15 @@ while [ "$#" -gt 0 ]; do
             OUTPUT_DIR="$2"
             shift 2
             ;;
+        --xeus-version)
+            if [ -z "$2" ] || [ "${2#-}" != "$2" ]; then
+                echo "error: --xeus-version requires a value" >&2
+                usage
+                exit 2
+            fi
+            XEUS_VERSION="$2"
+            shift 2
+            ;;
         -h|--help)
             usage
             exit 0
@@ -47,6 +57,51 @@ if [ -z "${OUTPUT_DIR}" ]; then
     OUTPUT_DIR=/opt/xeus5
 fi
 
+XEUS_VERSION=${XEUS_VERSION:-5.2.8}
+
+case "${XEUS_VERSION}" in
+    5.2.3)
+        VER_JSON=v3.11.3
+        VER_XEUS=5.2.3
+        VER_CPPZMQ=v4.10.0
+        VER_XEUS_ZMQ=3.1.0
+        VER_PYBIND11=v2.13.6
+        VER_PYBIND_JSON=0.2.15
+        VER_XEUS_PYTHON=0.17.4
+        ;;
+    5.2.8)
+        VER_JSON=v3.12.0
+        VER_XEUS=5.2.8
+        VER_CPPZMQ=v4.11.0
+        VER_XEUS_ZMQ=3.1.2
+        VER_PYBIND11=v2.13.6
+        VER_PYBIND_JSON=0.2.15
+        VER_XEUS_PYTHON=0.17.8
+        ;;
+    6.0.5)
+        VER_JSON=v3.12.0
+        VER_XEUS=6.0.5
+        VER_CPPZMQ=v4.11.0
+        VER_XEUS_ZMQ=4.0.0
+        VER_PYBIND11=v2.13.6
+        VER_PYBIND_JSON=0.2.15
+        VER_XEUS_PYTHON=0.18.3
+        ;;
+    tip)
+        VER_JSON=v3.12.0
+        VER_XEUS=6.0.5
+        VER_CPPZMQ=v4.11.0
+        VER_XEUS_ZMQ=4.0.0
+        VER_PYBIND11=v2.13.6
+        VER_PYBIND_JSON=0.2.15
+        VER_XEUS_PYTHON=0.19.0
+        ;;
+    *)
+        echo "error: unsupported xeus version: ${XEUS_VERSION} (supported: 5.2.3, 5.2.8, 6.0.5, tip)" >&2
+        exit 2
+        ;;
+esac
+
 if [ "${RUN_APT_GET}" -eq 1 ]; then
     sudo apt update -q -qq
     sudo apt install -q -qq -y wget make g++ git openssl pkg-config libzmq5-dev uuid-dev libssl-dev libsodium-dev python3-dev
@@ -62,42 +117,6 @@ export LD_LIBRARY_PATH=$HOME/.local/lib
 ##
 ## build script main
 ##
-
-### old
-#>VER_JSON=v3.11.3
-#>VER_XEUS=5.2.3
-#>VER_CPPZMQ=v4.10.0
-#>VER_XEUS_ZMQ=3.1.0
-#>VER_PYBIND11=v2.13.6
-#>VER_PYBIND_JSON=0.2.15
-#>VER_XEUS_PYTHON=0.17.4
-
-#>## stable xeus 5.2.x, xeus-zmq 3.1.x, xeus-python 0.17.x
-#>VER_JSON=v3.12.0
-#>VER_XEUS=5.2.8
-#>VER_CPPZMQ=v4.11.0
-#>VER_XEUS_ZMQ=3.1.2
-#>VER_PYBIND11=v2.13.6
-#>VER_PYBIND_JSON=0.2.15
-#>VER_XEUS_PYTHON=0.17.8
-
-## tip xeus 6.0.x, xeus-zmq 4.0.x, xeus-python 0.18.x
-VER_JSON=v3.12.0
-VER_XEUS=6.0.5
-VER_CPPZMQ=v4.11.0
-VER_XEUS_ZMQ=4.0.0
-VER_PYBIND11=v2.13.6
-VER_PYBIND_JSON=0.2.15
-VER_XEUS_PYTHON=0.18.3
-
-#>## tip xeus 6.0.x, xeus-zmq 4.0.x, xeus-python 0.19.x
-#>VER_JSON=v3.12.0
-#>VER_XEUS=6.0.5
-#>VER_CPPZMQ=v4.11.0
-#>VER_XEUS_ZMQ=4.0.0
-#>VER_PYBIND11=v2.13.6
-#>VER_PYBIND_JSON=0.2.15
-#>VER_XEUS_PYTHON=0.19.0
 
 #### xeus
 ## json

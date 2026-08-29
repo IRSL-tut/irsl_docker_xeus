@@ -16,6 +16,13 @@ docker build . -f Dockerfile.xeus5all -t xeus5:latest
 ./local_build5.sh --apt-get --output-dir /opt/xeus
 ```
 
+Select a compatible xeus package set with `--xeus-version`. Supported versions are
+`5.2.3`, `5.2.8` (the default), `6.0.5`, and tip.
+
+```bash
+./local_build5.sh --apt-get --output-dir /opt/xeus --xeus-version 5.2.8
+```
+
 ## Reference
 
 https://github.com/jupyter-xeus/xeus
